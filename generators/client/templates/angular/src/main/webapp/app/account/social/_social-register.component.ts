@@ -1,4 +1,6 @@
 import { Component, OnInit, Input, Inject } from '@angular/core';
+import { JhiLanguageService } from 'ng-jhipster';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
     selector: '<%=jhiPrefix%>-register',
@@ -7,15 +9,24 @@ import { Component, OnInit, Input, Inject } from '@angular/core';
 export class SocialRegisterComponent implements OnInit  {
     success: boolean;
     error: boolean;
-    @Input() provider: string;
+    provider: string;
     providerLabel: string;
 
-    constructor (@Inject('$stateParams') private $stateParams){}
+    constructor (
+        private route: ActivatedRoute,
+        private jhiLanguageService: JhiLanguageService
+    ) {
+        this.jhiLanguageService.setLocations(['social']);
+    }
 
     ngOnInit() {
-        this.success = this.$stateParams.success;
+        this.route.queryParams.subscribe(queryParams => {
+            this.success = queryParams['success'];
+        });
+        this.route.params.subscribe(params => {
+            this.provider = params['provider?{success:boolean}'];
+        });
         this.error = !this.success;
-        this.provider = this.$stateParams.provider;
         this.providerLabel = this.provider.charAt(0).toUpperCase() + this.provider.slice(1);
     }
 }

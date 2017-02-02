@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { JhiLanguageService } from 'ng-jhipster';
+
 import { <%=jhiPrefixCapitalized%>HealthService } from './health.service';
 import { <%=jhiPrefixCapitalized%>HealthModalComponent } from './health-modal.component';
 
@@ -8,10 +10,17 @@ import { <%=jhiPrefixCapitalized%>HealthModalComponent } from './health-modal.co
     templateUrl: './health.component.html',
 })
 export class <%=jhiPrefixCapitalized%>HealthCheckComponent implements OnInit {
-    healthData:any;
-    updatingHealth:boolean;
+    healthData: any;
+    updatingHealth: boolean;
 
-    constructor(private modalService: NgbModal, private healthService:<%=jhiPrefixCapitalized%>HealthService) {}
+    constructor(
+        private jhiLanguageService: JhiLanguageService,
+        private modalService: NgbModal,
+        private healthService: <%=jhiPrefixCapitalized%>HealthService
+    ) {
+        this.jhiLanguageService.setLocations(['health']);
+
+    }
 
     ngOnInit() {
         this.refresh();
@@ -21,11 +30,11 @@ export class <%=jhiPrefixCapitalized%>HealthCheckComponent implements OnInit {
         return this.healthService.getBaseName(name);
     }
 
-    getLabelClass(statusState) {
+    getTagClass(statusState) {
         if (statusState === 'UP') {
-            return 'label-success';
+            return 'tag-success';
         } else {
-            return 'label-danger';
+            return 'tag-danger';
         }
     }
 

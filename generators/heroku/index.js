@@ -5,6 +5,7 @@ var util = require('util'),
     exec = require('child_process').exec,
     chalk = require('chalk'),
     _ = require('lodash'),
+    glob = require('glob'),
     scriptBase = require('../generator-base');
 
 const constants = require('../generator-constants');
@@ -38,8 +39,10 @@ module.exports = HerokuGenerator.extend({
         if (this.herokuAppName) {
             exec('heroku apps:info --json', function (err, stdout) {
                 if (err) {
+                    this.config.set('herokuAppName', null);
                     this.abort = true;
-                    this.log.error(err);
+                    this.log.error(`Could not find app: ${chalk.cyan(this.herokuAppName)}`);
+                    this.log.error('Run the generator again to create a new app.');
                 } else {
                     var json = JSON.parse(stdout);
                     this.herokuAppName = json['app']['name'];
@@ -276,10 +279,19 @@ module.exports = HerokuGenerator.extend({
             this.template('_bootstrap-heroku.yml', constants.SERVER_MAIN_RES_DIR + '/config/bootstrap-heroku.yml');
             this.template('_application-heroku.yml', constants.SERVER_MAIN_RES_DIR + '/config/application-heroku.yml');
             this.template('_Procfile', 'Procfile');
+            if (this.buildTool === 'gradle') {
+                this.template('_heroku.gradle', 'gradle/heroku.gradle');
+            }
 
             this.conflicter.resolve(function (err) {
                 done();
             });
+        },
+
+        addHerokuBuildPlugin: function () {
+            if (this.buildTool !== 'gradle') return;
+            this.addGradlePlugin('gradle.plugin.com.heroku.sdk', 'heroku-gradle', '0.2.0');
+            this.applyFromGradleScript('gradle/heroku');
         }
     },
 
@@ -311,12 +323,14 @@ module.exports = HerokuGenerator.extend({
             var done = this.async();
             this.log(chalk.bold('\nDeploying application'));
 
-            var herokuDeployCommand = 'heroku deploy:jar target/*.war';
+            var warFileWildcard = 'target/*.war';
             if (this.buildTool === 'gradle') {
-                herokuDeployCommand = 'heroku deploy:jar build/libs/*.war';
+                warFileWildcard = 'build/libs/*.war';
             }
 
-            herokuDeployCommand += ' --app ' + this.herokuAppName;
+            var files = glob.sync(warFileWildcard, {});
+            var warFile = files[0];
+            var herokuDeployCommand = `heroku deploy:jar ${warFile} --app ${this.herokuAppName}`;
 
             this.log(chalk.bold('\nUploading your application code.\nThis may take ' + chalk.cyan('several minutes') + ' depending on your connection speed...'));
             var child = exec(herokuDeployCommand, function (err, stdout) {

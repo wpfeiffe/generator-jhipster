@@ -1,16 +1,19 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { CookieService } from 'angular2-cookie/services/cookies.service';
+import { DatePipe } from '@angular/common';
 
+import { CookieService } from 'angular2-cookie/services/cookies.service';
 import {
     <%=angular2AppName%>SharedLibsModule,
     <%=angular2AppName%>SharedCommonModule,
     CSRFService,
     AuthService,
+    <%_ if (!skipServer) { _%>
     AuthServerProvider,
-    <%_ if (authenticationType === 'oauth2') { _%>
-    Base64,
     <%_ } _%>
     AccountService,
+    <%_ if (!skipUserManagement) { _%>
+    UserService,
+    <%_ } _%>
     StateStorageService,
     LoginService,
     LoginModalService,
@@ -48,17 +51,20 @@ import {
         StateStorageService,
         Principal,
         CSRFService,
-        <%_ if (authenticationType === 'oauth2') { _%>
-        Base64,
-        <%_ } _%>
         <%_ if (websocket === 'spring-websocket') { _%>
         <%=jhiPrefixCapitalized%>TrackerService,
         <%_ } _%>
+        <%_ if (!skipServer) { _%>
         AuthServerProvider,
+        <%_ } _%>
         <%_ if (enableSocialSignIn) { _%>
         SocialService,
         <%_ } _%>
-        AuthService
+        AuthService,
+        <%_ if (!skipUserManagement) { _%>
+        UserService,
+        <%_ } _%>
+        DatePipe
     ],
     entryComponents: [<%=jhiPrefixCapitalized%>LoginModalComponent],
     exports: [
@@ -68,7 +74,8 @@ import {
         <%_ } _%>
         <%=jhiPrefixCapitalized%>LoginModalComponent,
         HasAuthorityDirective,
-        HasAnyAuthorityDirective
+        HasAnyAuthorityDirective,
+        DatePipe
     ],
     schemas: [CUSTOM_ELEMENTS_SCHEMA]
 

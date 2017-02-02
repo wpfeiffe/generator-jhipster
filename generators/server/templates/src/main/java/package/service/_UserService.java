@@ -9,9 +9,12 @@ import <%=packageName%>.repository.search.UserSearchRepository;<% } %>
 import <%=packageName%>.security.AuthoritiesConstants;
 import <%=packageName%>.security.SecurityUtils;
 import <%=packageName%>.service.util.RandomUtil;
-import <%=packageName%>.web.rest.vm.ManagedUserVM;
+import <%=packageName%>.service.dto.UserDTO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;<% } %>
 import org.springframework.security.crypto.password.PasswordEncoder;
 <%_ if (databaseType == 'sql' && authenticationType == 'oauth2') { _%>
@@ -24,7 +27,8 @@ import org.springframework.transaction.annotation.Transactional;<% } %>
 import java.time.LocalDate;
 <%_ } _%>
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.*;<% if (databaseType == 'cassandra') { %>
+import java.util.stream.Collectors;<% } %>
 
 /**
  * Service class for managing users.
@@ -129,8 +133,8 @@ public class UserService {
             });
     }
 
-    public User createUser(String login, String password, String firstName, String lastName, String email,
-        String langKey) {
+    public User createUser(String login, String password, String firstName, String lastName, String email<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>,
+        String imageUrl<% } %>, String langKey) {
 
         User newUser = new User();<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
         Authority authority = authorityRepository.findOne(AuthoritiesConstants.USER);
@@ -144,13 +148,20 @@ public class UserService {
         newUser.setFirstName(firstName);
         newUser.setLastName(lastName);
         newUser.setEmail(email);
+        <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        newUser.setImageUrl(imageUrl);
+        <%_ } _%>
         newUser.setLangKey(langKey);
         // new user is not active
         newUser.setActivated(false);
         // new user gets registration key
-        newUser.setActivationKey(RandomUtil.generateActivationKey());<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-        authorities.add(authority);<% } %><% if (databaseType == 'cassandra') { %>
-        authorities.add(AuthoritiesConstants.USER);<% } %>
+        newUser.setActivationKey(RandomUtil.generateActivationKey());
+        <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        authorities.add(authority);
+        <%_ } _%>
+        <%_ if (databaseType == 'cassandra') { _%>
+        authorities.add(AuthoritiesConstants.USER);
+        <%_ } _%>
         newUser.setAuthorities(authorities);
         userRepository.save(newUser);<% if (searchEngine == 'elasticsearch') { %>
         userSearchRepository.save(newUser);<% } %>
@@ -158,26 +169,33 @@ public class UserService {
         return newUser;
     }
 
-    public User createUser(ManagedUserVM managedUserVM) {
+    public User createUser(UserDTO userDTO) {
         User user = new User();<% if (databaseType == 'cassandra') { %>
         user.setId(UUID.randomUUID().toString());<% } %>
-        user.setLogin(managedUserVM.getLogin());
-        user.setFirstName(managedUserVM.getFirstName());
-        user.setLastName(managedUserVM.getLastName());
-        user.setEmail(managedUserVM.getEmail());
-        if (managedUserVM.getLangKey() == null) {
+        user.setLogin(userDTO.getLogin());
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        user.setEmail(userDTO.getEmail());
+        <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        user.setImageUrl(userDTO.getImageUrl());
+        <%_ } _%>
+        if (userDTO.getLangKey() == null) {
             user.setLangKey("<%= nativeLanguage %>"); // default language
         } else {
-            user.setLangKey(managedUserVM.getLangKey());
-        }<% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
-        if (managedUserVM.getAuthorities() != null) {
+            user.setLangKey(userDTO.getLangKey());
+        }
+        <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+        if (userDTO.getAuthorities() != null) {
             Set<Authority> authorities = new HashSet<>();
-            managedUserVM.getAuthorities().forEach(
+            userDTO.getAuthorities().forEach(
                 authority -> authorities.add(authorityRepository.findOne(authority))
             );
             user.setAuthorities(authorities);
-        }<% } %><% if (databaseType == 'cassandra') { %>
-        user.setAuthorities(managedUserVM.getAuthorities());<% } %>
+        }
+        <%_ } _%>
+        <%_ if (databaseType == 'cassandra') { _%>
+        user.setAuthorities(userDTO.getAuthorities());
+        <%_ } _%>
         String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
         user.setPassword(encryptedPassword);
         user.setResetKey(RandomUtil.generateResetKey());
@@ -189,6 +207,9 @@ public class UserService {
         return user;
     }
 
+    /**
+     * Update basic information (first name, last name, email, language) for the current user.
+     */
     public void updateUser(String firstName, String lastName, String email, String langKey) {
         userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).ifPresent(user -> {
             user.setFirstName(firstName);
@@ -205,32 +226,38 @@ public class UserService {
         });
     }
 
-    public void updateUser(<% if (databaseType == 'mongodb' || databaseType == 'cassandra') { %>String<% } else { %>Long<% } %> id, String login, String firstName, String lastName, String email,
-        boolean activated, String langKey, Set<String> authorities) {
-
-        Optional.of(userRepository
-            .findOne(id))
-            .ifPresent(user -> {
-                user.setLogin(login);
-                user.setFirstName(firstName);
-                user.setLastName(lastName);
-                user.setEmail(email);
-                user.setActivated(activated);
-                user.setLangKey(langKey);
+    /**
+     * Update all information for a specific user, and return the modified user.
+     */
+    public Optional<UserDTO> updateUser(UserDTO userDTO) {
+        return Optional.of(userRepository
+            .findOne(userDTO.getId()))
+            .map(user -> {
+                user.setLogin(userDTO.getLogin());
+                user.setFirstName(userDTO.getFirstName());
+                user.setLastName(userDTO.getLastName());
+                user.setEmail(userDTO.getEmail());
+                <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
+                user.setImageUrl(userDTO.getImageUrl());
+                <%_ } _%>
+                user.setActivated(userDTO.isActivated());
+                user.setLangKey(userDTO.getLangKey());
                 <%_ if (databaseType == 'sql' || databaseType == 'mongodb') { _%>
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear();
-                authorities.forEach(
-                    authority -> managedAuthorities.add(authorityRepository.findOne(authority))
-                );
+                userDTO.getAuthorities().stream()
+                    .map(authorityRepository::findOne)
+                    .forEach(managedAuthorities::add);
                 <%_ } else { // Cassandra _%>
-                user.setAuthorities(authorities);
+                user.setAuthorities(userDTO.getAuthorities());
                 <%_ } _%>
                 <%_ if (databaseType == 'mongodb' || databaseType == 'cassandra') { _%>
                 userRepository.save(user);
                 <%_ } _%>
                 log.debug("Changed Information for User: {}", user);
-            });
+                return user;
+            })
+            .map(UserDTO::new);
     }
 
     public void deleteUser(String login) {
@@ -262,14 +289,23 @@ public class UserService {
     }
 
     <%_ if (databaseType == 'sql') { _%>
+    @Transactional(readOnly = true)<%_ } _%>
+    <% if (databaseType == 'sql' || databaseType == 'mongodb') { %>
+    public Page<UserDTO> getAllManagedUsers(Pageable pageable) {
+        return userRepository.findAll(pageable).map(UserDTO::new);
+    }<% } else { // Cassandra %>
+    public List<UserDTO> getAllManagedUsers() {
+        return userRepository.findAll().stream()
+            .map(UserDTO::new)
+            .collect(Collectors.toList());
+    }<% } %>
+
+    <%_ if (databaseType == 'sql') { _%>
     @Transactional(readOnly = true)
     <%_ } _%>
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
         <%_ if (databaseType == 'sql') { _%>
-        return userRepository.findOneByLogin(login).map(user -> {
-            user.getAuthorities().size();
-            return user;
-        });
+        return userRepository.findOneWithAuthoritiesByLogin(login);
         <%_ } else { // MongoDB and Cassandra _%>
         return userRepository.findOneByLogin(login);
         <%_ } _%>
@@ -279,26 +315,22 @@ public class UserService {
     @Transactional(readOnly = true)
     <%_ } _%>
     public User getUserWithAuthorities(<%= pkType %> id) {
-        User user = userRepository.findOne(id);
         <%_ if (databaseType == 'sql') { _%>
-        user.getAuthorities().size(); // eagerly load the association
+        return userRepository.findOneWithAuthoritiesById(id);
+        <%_ } else { // MongoDB and Cassandra _%>
+        return userRepository.findOne(id);
         <%_ } _%>
-        return user;
     }
 
     <%_ if (databaseType == 'sql') { _%>
     @Transactional(readOnly = true)
     <%_ } _%>
     public User getUserWithAuthorities() {
-        Optional<User> optionalUser = userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin());
-        User user = null;
-        if (optionalUser.isPresent()) {
-          user = optionalUser.get();
-          <%_ if (databaseType == 'sql') { _%>
-            user.getAuthorities().size(); // eagerly load the association
-          <%_ } _%>
-         }
-         return user;
+        <%_ if (databaseType == 'sql') { _%>
+        return userRepository.findOneWithAuthoritiesByLogin(SecurityUtils.getCurrentUserLogin()).orElse(null);
+        <%_ } else { // MongoDB and Cassandra _%>
+        return userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin()).orElse(null);
+        <%_ } _%>
     }
     <%_ if ((databaseType == 'sql' || databaseType == 'mongodb') && authenticationType == 'session') { _%>
 

@@ -1,6 +1,6 @@
 package <%=packageName%>.web.filter;
 
-import <%=packageName%>.config.JHipsterProperties;
+import io.github.jhipster.config.JHipsterProperties;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class CachingHttpHeadersFilter implements Filter {
 
     // We consider the last modified date is the start up time of the server
-    private final static long LAST_MODIFIED = System.currentTimeMillis();
+    private static final long LAST_MODIFIED = System.currentTimeMillis();
 
     private long CACHE_TIME_TO_LIVE = TimeUnit.DAYS.toMillis(1461L);
 

@@ -4,4 +4,6 @@ import { Component } from '@angular/core';
     selector: '<%=jhiPrefix%>-docs',
     templateUrl: './docs.component.html'
 })
-export class <%=jhiPrefixCapitalized%>DocsComponent {}
+export class <%=jhiPrefixCapitalized%>DocsComponent {
+    constructor () {}
+}

@@ -105,7 +105,6 @@ function askForTestOpts() {
             {name: 'Gatling', value: 'gatling'},
             {name: 'Cucumber', value: 'cucumber'}
         );
-        defaultChoice = ['gatling'];
     }
     if (!this.skipClient) {
         // all client side test frameworks should be added here
@@ -119,7 +118,7 @@ function askForTestOpts() {
         type: 'checkbox',
         name: 'testFrameworks',
         message: function (response) {
-            return getNumberedQuestion('Which testing frameworks would you like to use?', true);
+            return getNumberedQuestion('Besides JUnit and Karma, which testing frameworks would you like to use?', true);
         },
         choices: choices,
         default: defaultChoice
@@ -138,17 +137,17 @@ function askForClient() {
 
     this.prompt({
         type: 'list',
-        name: 'clientFw',
+        name: 'clientFramework',
         when: function (response) {
-            return (applicationType !== 'microservice');
+            return (applicationType !== 'microservice' && applicationType !== 'uaa');
         },
         message: function (response) {
-            return getNumberedQuestion('Which *Framework* would you like to use for the client?', applicationType !== 'microservice');
+            return getNumberedQuestion('Which *Framework* would you like to use for the client?', applicationType !== 'microservice' && applicationType !== 'uaa');
         },
         choices: [
             {
                 value: 'angular1',
-                name: 'Angular 1.x'
+                name: 'AngularJS 1.x'
             },
             {
                 value: 'angular2',
@@ -157,11 +156,10 @@ function askForClient() {
         ],
         default: 'angular1'
     }).then(function (prompt) {
-        this.clientFw = this.configOptions.clientFw = prompt.clientFw;
+        this.clientFramework = this.configOptions.clientFramework = prompt.clientFramework;
         done();
     }.bind(this));
 }
-
 
 function askForMoreModules() {
     if (this.existingProject) {
@@ -174,7 +172,7 @@ function askForMoreModules() {
         type: 'confirm',
         name: 'installModules',
         message: function(response) {
-            return generator.getNumberedQuestion('Would you like to install other generators from the JHipster Market Place?', true);
+            return generator.getNumberedQuestion('Would you like to install other generators from the JHipster Marketplace?', true);
         },
         default: false
     }).then(function (prompt) {

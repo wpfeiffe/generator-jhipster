@@ -1,5 +1,7 @@
 package <%=packageName%>.config;
 
+import io.github.jhipster.config.JHipsterProperties;
+
 import ch.qos.logback.classic.AsyncAppender;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
@@ -111,10 +113,12 @@ public class LoggingConfiguration {
 
         @Override
         public void onStop(LoggerContext context) {
+            // Nothing to do.
         }
 
         @Override
         public void onLevelChange(ch.qos.logback.classic.Logger logger, Level level) {
+            // Nothing to do.
         }
     }
 

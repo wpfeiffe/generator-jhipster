@@ -1,33 +1,42 @@
 package <%=packageName%>.config;
+<%_ if (hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') { _%>
 
-<% if (hibernateCache == 'hazelcast') { %>
+import io.github.jhipster.config.JHipsterConstants;
+import io.github.jhipster.config.JHipsterProperties;
+
 import com.hazelcast.config.Config;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.EvictionPolicy;
-import com.hazelcast.config.MaxSizeConfig;<% } %>
+import com.hazelcast.config.MaxSizeConfig;
+<%_ } _%>
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-<%_ if (hibernateCache == 'hazelcast' && serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { _%>
+<%_ if ((hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') && serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { _%>
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 <%_ } _%><%_ if (hibernateCache == 'hazelcast' || hibernateCache == 'no') { _%>
 import org.springframework.cache.CacheManager;
 <%_ } _%>
 import org.springframework.cache.annotation.EnableCaching;
-<%_ if (hibernateCache == 'hazelcast' && serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { _%>
+<%_ if ((hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') && serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { _%>
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 <%_ } _%>
 import org.springframework.context.annotation.*;<% if (hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') { %>
 import org.springframework.core.env.Environment;<% } %><% if (hibernateCache == 'no') { %>
-import org.springframework.cache.support.NoOpCacheManager;<% } %><% if (clusteredHttpSession == 'hazelcast') { %>
+import org.springframework.cache.support.NoOpCacheManager;<% } %>
+<%_ if (clusteredHttpSession == 'hazelcast') { _%>
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;<% } %>
+import org.springframework.security.core.session.SessionRegistryImpl;
+<%_ } _%>
 
+<%_ if (hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') { _%>
 import javax.annotation.PreDestroy;
+<%_ } _%>
 <%_ if (hibernateCache == 'ehcache') { _%>
 import javax.cache.CacheManager;
 <%_ } _%>
@@ -39,7 +48,7 @@ import javax.cache.CacheManager;
 public class CacheConfiguration {
 
     private final Logger log = LoggerFactory.getLogger(CacheConfiguration.class);
-    <%_ if (hibernateCache == 'hazelcast') { _%>
+    <%_ if (hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') { _%>
 
     private final Environment env;
         <%_ if (serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { _%>
@@ -58,8 +67,8 @@ public class CacheConfiguration {
         <%_ } _%>
     <%_ } _%>
 
-    public CacheConfiguration(<% if (hibernateCache == 'hazelcast') { %>Environment env<% if (serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { %>, DiscoveryClient discoveryClient, ServerProperties serverProperties<% } } %><% if (hibernateCache == 'ehcache') { %>CacheManager cacheManager<% if (clusteredHttpSession == 'hazelcast') { %>, Environment env<% } } %>) {
-        <%_ if (hibernateCache == 'hazelcast') { _%>
+    public CacheConfiguration(<% if (hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') { %>Environment env<% if (serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { %>, DiscoveryClient discoveryClient, ServerProperties serverProperties<% } } %><% if (hibernateCache == 'ehcache') { %>CacheManager cacheManager<% if (clusteredHttpSession == 'hazelcast') { %>, Environment env<% } } %>) {
+        <%_ if (hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') { _%>
         this.env = env;
             <%_ if (serviceDiscoveryType && (applicationType == 'microservice' || applicationType == 'gateway')) { _%>
         this.discoveryClient = discoveryClient;
@@ -73,14 +82,13 @@ public class CacheConfiguration {
             <%_ } _%>
         <%_ } _%>
     }
+    <%_ if (hibernateCache == 'hazelcast' || clusteredHttpSession == 'hazelcast') { _%>
 
     @PreDestroy
     public void destroy() {
-        log.info("Closing Cache Manager");<% if (hibernateCache == 'ehcache') { %>
-        cacheManager.close();<% } %><% if (hibernateCache == 'hazelcast') { %>
-        Hazelcast.shutdownAll();<% } %>
+        log.info("Closing Cache Manager");
+        Hazelcast.shutdownAll();
     }
-    <%_ if (hibernateCache == 'hazelcast') { _%>
 
     @Bean
     public CacheManager cacheManager(HazelcastInstance hazelcastInstance) {
@@ -100,7 +108,7 @@ public class CacheConfiguration {
         log.debug("Configuring Hazelcast clustering for instanceId: {}", serviceId);
 
         // In development, everything goes through 127.0.0.1, with a different port
-        if (env.acceptsProfiles(Constants.SPRING_PROFILE_DEVELOPMENT)) {
+        if (env.acceptsProfiles(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT)) {
             log.debug("Application is running with the \"dev\" profile, Hazelcast " +
                       "cluster will only work with localhost instances");
 
@@ -128,7 +136,7 @@ public class CacheConfiguration {
         config.getNetworkConfig().setPortAutoIncrement(true);
 
         // In development, remove multicast auto-configuration
-        if (env.acceptsProfiles(Constants.SPRING_PROFILE_DEVELOPMENT)) {
+        if (env.acceptsProfiles(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT)) {
             System.setProperty("hazelcast.local.localAddress", "127.0.0.1");
 
             config.getNetworkConfig().getJoin().getAwsConfig().setEnabled(false);
@@ -137,7 +145,9 @@ public class CacheConfiguration {
         }
         <%_ } _%>
         config.getMapConfigs().put("default", initializeDefaultMapConfig());
+        <%_ if (hibernateCache == 'hazelcast') { _%>
         config.getMapConfigs().put("<%=packageName%>.domain.*", initializeDomainMapConfig(jHipsterProperties));
+        <%_ } _%>
         <%_ if (clusteredHttpSession == 'hazelcast') { _%>
         config.getMapConfigs().put("clustered-http-sessions", initializeClusteredSession(jHipsterProperties));
         <%_ } _%>
@@ -173,21 +183,23 @@ public class CacheConfiguration {
 
         return mapConfig;
     }
+        <%_ if (hibernateCache == 'hazelcast') { _%>
 
     private MapConfig initializeDomainMapConfig(JHipsterProperties jHipsterProperties) {
         MapConfig mapConfig = new MapConfig();
         mapConfig.setTimeToLiveSeconds(jHipsterProperties.getCache().getHazelcast().getTimeToLiveSeconds());
         return mapConfig;
     }
-
-    <%_ } else if (hibernateCache == 'no'){ _%>
+        <%_ } _%>
+    <%_ } else if (hibernateCache == 'no') { _%>
 
     @Bean
     public CacheManager cacheManager() {
         log.debug("No cache");
         return new NoOpCacheManager();
     }
-    <%_ } _%><%_ if (clusteredHttpSession == 'hazelcast') { _%>
+    <%_ } _%>
+    <%_ if (clusteredHttpSession == 'hazelcast') { _%>
 
     private MapConfig initializeClusteredSession(JHipsterProperties jHipsterProperties) {
         MapConfig mapConfig = new MapConfig();

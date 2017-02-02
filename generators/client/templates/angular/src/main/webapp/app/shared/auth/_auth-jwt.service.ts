@@ -9,14 +9,14 @@ export class AuthServerProvider {
         private http: Http,
         private $localStorage: LocalStorageService,
         private $sessionStorage: SessionStorageService
-    ){}
+    ) {}
 
     getToken () {
         return this.$localStorage.retrieve('authenticationToken') || this.$sessionStorage.retrieve('authenticationToken');
     }
 
     login (credentials): Observable<any> {
-<%_ if(authenticationType === 'uaa') { _%>
+<%_ if (authenticationType === 'uaa') { _%>
         let data = new URLSearchParams();
         data.append('grant_type', 'password');
         data.append('username', credentials.username);
@@ -24,13 +24,13 @@ export class AuthServerProvider {
 
         let headers = new Headers ({
             'Content-Type': 'application/x-www-form-urlencoded',
-            "Authorization" : "Basic d2ViX2FwcDo="
+            'Authorization' : 'Basic d2ViX2FwcDo='
         });
 
         return this.http.post('<%= uaaBaseName.toLowerCase() %>/oauth/token', data, {
             headers: headers
         }).map((resp) => {
-            let accessToken = resp.json()["access_token"];
+            let accessToken = resp.json()['access_token'];
             if (accessToken) {
                 this.storeAuthenticationToken(accessToken, credentials.rememberMe);
             }
@@ -38,7 +38,7 @@ export class AuthServerProvider {
             return accessToken;
         });
 <% } else { %>
-        var data = {
+        let data = {
             username: credentials.username,
             password: credentials.password,
             rememberMe: credentials.rememberMe
@@ -46,9 +46,9 @@ export class AuthServerProvider {
         return this.http.post('api/authenticate', data).map(authenticateSuccess.bind(this));
 
         function authenticateSuccess (resp) {
-            var bearerToken = resp.headers.get('Authorization');
+            let bearerToken = resp.headers.get('Authorization');
             if (bearerToken && bearerToken.slice(0, 7) === 'Bearer ') {
-                var jwt = bearerToken.slice(7, bearerToken.length);
+                let jwt = bearerToken.slice(7, bearerToken.length);
                 this.storeAuthenticationToken(jwt, credentials.rememberMe);
                 return jwt;
             }
@@ -61,12 +61,12 @@ export class AuthServerProvider {
             this.storeAuthenticationToken(jwt, rememberMe);
             return Promise.resolve(jwt);
         } else {
-            return Promise.reject("auth-jwt-service Promise reject"); //Put appropriate error message here
+            return Promise.reject('auth-jwt-service Promise reject'); // Put appropriate error message here
         }
     }
 
     storeAuthenticationToken(jwt, rememberMe) {
-        if(rememberMe){
+        if (rememberMe) {
             this.$localStorage.store('authenticationToken', jwt);
         } else {
             this.$sessionStorage.store('authenticationToken', jwt);

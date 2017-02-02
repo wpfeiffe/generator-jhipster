@@ -1,6 +1,9 @@
 package <%=packageName%>.config;
 
 import <%=packageName%>.security.AuthoritiesConstants;
+
+import io.github.jhipster.config.JHipsterProperties;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +24,8 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
 
 import javax.servlet.http.HttpServletResponse;
 import java.security.KeyPair;
@@ -36,9 +41,12 @@ public class UaaConfiguration extends AuthorizationServerConfigurerAdapter {
 
         private final JHipsterProperties jHipsterProperties;
 
-        public ResourceServerConfiguration(TokenStore tokenStore, JHipsterProperties jHipsterProperties) {
+        private final CorsFilter corsFilter;
+
+        public ResourceServerConfiguration(TokenStore tokenStore, JHipsterProperties jHipsterProperties, CorsFilter corsFilter) {
             this.tokenStore = tokenStore;
             this.jHipsterProperties = jHipsterProperties;
+            this.corsFilter = corsFilter;
         }
 
         @Override
@@ -49,6 +57,7 @@ public class UaaConfiguration extends AuthorizationServerConfigurerAdapter {
             .and()
                 .csrf()
                 .disable()
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
                 .headers()
                 .frameOptions()
                 .disable()

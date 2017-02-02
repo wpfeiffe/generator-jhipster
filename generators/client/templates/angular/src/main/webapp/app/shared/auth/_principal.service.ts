@@ -3,7 +3,7 @@ import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { AccountService } from './account.service';
 <%_ if (websocket === 'spring-websocket') { _%>
-import { <%=jhiPrefixCapitalized%>TrackerService } from '../tracker/tracker.service';//Barrel doesnt work here. No idea why!
+import { <%=jhiPrefixCapitalized%>TrackerService } from '../tracker/tracker.service'; // Barrel doesnt work here. No idea why!
 <%_ } _%>
 
 @Injectable()
@@ -15,7 +15,7 @@ export class Principal {
     constructor(
         private account: AccountService<% if (websocket === 'spring-websocket') { %>,
         private trackerService: <%=jhiPrefixCapitalized%>TrackerService<% } %>
-    ){}
+    ) {}
 
     authenticate (_identity) {
         this._identity = _identity;
@@ -74,6 +74,11 @@ export class Principal {
             this.authenticationState.next(this._identity);
             return this._identity;
         }).catch(err => {
+            <%_ if (websocket === 'spring-websocket') { _%>
+            if (this.trackerService.stompClient && this.trackerService.stompClient.connected) {
+                this.trackerService.disconnect();
+            }
+            <%_ } _%>
             this._identity = null;
             this.authenticated = false;
             this.authenticationState.next(this._identity);
@@ -91,5 +96,9 @@ export class Principal {
 
     getAuthenticationState(): Observable<any> {
         return this.authenticationState.asObservable();
+    }
+
+    getImageUrl(): String {
+        return this.isIdentityResolved () ? this._identity.imageUrl : null;
     }
 }

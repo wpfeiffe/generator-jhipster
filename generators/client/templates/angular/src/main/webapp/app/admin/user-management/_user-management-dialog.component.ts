@@ -1,15 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import { User } from './user.model';
-import { UserService } from './user.service';
-<%_ if (enableTranslation){ _%>
-import { JhiLanguageService } from '../../shared';
-<%_ }_%>
-import { EventManager } from '../../shared/service/event-manager.service';
+import { NgbActiveModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { EventManager, JhiLanguageService } from 'ng-jhipster';
+
+import { UserModalService } from './user-modal.service';
+import { <% if (enableTranslation) { %>JhiLanguageHelper,<% } %> User, UserService } from '../../shared';
 
 @Component({
-    selector: 'user-mgmt-dialog',
+    selector: '<%=jhiPrefix%>-user-mgmt-dialog',
     templateUrl: './user-management-dialog.component.html'
 })
 export class UserMgmtDialogComponent implements OnInit {
@@ -19,47 +18,80 @@ export class UserMgmtDialogComponent implements OnInit {
     authorities: any[];
     isSaving: Boolean;
 
-    constructor(
+    constructor (
         public activeModal: NgbActiveModal,
-        <%_ if (enableTranslation){ _%>
-        private languageService: JhiLanguageService,
+        <%_ if (enableTranslation) { _%>
+        private languageHelper: JhiLanguageHelper,
+        private jhiLanguageService: JhiLanguageService,
         <%_ } _%>
         private userService: UserService,
-        private eventManager: EventManager
+        private eventManager: EventManager,
+        private router: Router
     ) {}
 
     ngOnInit() {
         this.isSaving = false;
         this.authorities = ['ROLE_USER', 'ROLE_ADMIN'];
-        <%_ if (enableTranslation){ _%>
-        this.languageService.getAll().then((languages) => {
+        <%_ if (enableTranslation) { _%>
+        this.languageHelper.getAll().then((languages) => {
             this.languages = languages;
         });
+        this.jhiLanguageService.setLocations(['user-management']);
         <%_ } _%>
     }
 
-    clear () {
+    clear() {
         this.activeModal.dismiss('cancel');
+        this.router.navigate([{ outlets: { popup: null }}], { replaceUrl: true });
     }
 
-    save () {
+    save() {
         this.isSaving = true;
         if (this.user.id !== null) {
             this.userService.update(this.user).subscribe(response => this.onSaveSuccess(response), () => this.onSaveError());
-        } else {<% if (!enableTranslation){ %>
+        } else {<% if (!enableTranslation) { %>
             this.user.langKey = 'en';<% } %>
             this.userService.create(this.user).subscribe(response => this.onSaveSuccess(response), () => this.onSaveError());
         }
     }
 
-    private onSaveSuccess (result) {
-        this.eventManager.broadcast({ name: 'userListModification', content:'OK'});
+    private onSaveSuccess(result) {
+        this.eventManager.broadcast({ name: 'userListModification', content: 'OK' });
         this.isSaving = false;
         this.activeModal.dismiss(result);
+        this.router.navigate([{ outlets: { popup: null }}], { replaceUrl: true });
     }
 
-    private onSaveError () {
+    private onSaveError() {
         this.isSaving = false;
     }
+}
 
+@Component({
+    selector: '<%=jhiPrefix%>-user-dialog',
+    template: ''
+})
+export class UserDialogComponent implements OnInit, OnDestroy {
+
+    modalRef: NgbModalRef;
+    routeSub: any;
+
+    constructor (
+        private route: ActivatedRoute,
+        private userModalService: UserModalService
+    ) {}
+
+    ngOnInit() {
+        this.routeSub = this.route.params.subscribe(params => {
+            if ( params['login'] ) {
+                this.modalRef = this.userModalService.open(UserMgmtDialogComponent, params['login']);
+            } else {
+                this.modalRef = this.userModalService.open(UserMgmtDialogComponent);
+            }
+        });
+    }
+
+    ngOnDestroy() {
+        this.routeSub.unsubscribe();
+    }
 }

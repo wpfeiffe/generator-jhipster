@@ -38,27 +38,40 @@ util.inherits(Generator, yeoman.Base);
  * @param {string} routerName - The name of the AngularJS router that is added to the menu.
  * @param {string} glyphiconName - The name of the Glyphicon (from Bootstrap) that will be displayed.
  * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addElementToMenu = function (routerName, glyphiconName, enableTranslation) {
+Generator.prototype.addElementToMenu = function (routerName, glyphiconName, enableTranslation, clientFramework) {
     try {
         var navbarPath;
-        if (this.clientFw === 'angular1') {
+        if (clientFramework === 'angular1') {
             navbarPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.html';
+            jhipsterUtils.rewriteFile({
+                file: navbarPath,
+                needle: 'jhipster-needle-add-element-to-menu',
+                splicable: [`<li ui-sref-active="active">
+                                <a ui-sref="${routerName}" ng-click="vm.collapseNavbar()">
+                                    <span class="glyphicon glyphicon-${glyphiconName}"></span>&nbsp;
+                                    <span ${enableTranslation ? 'data-translate="global.menu.' + routerName + '"' : ''}>${_.startCase(routerName)}</span>
+                                </a>
+                            </li>`
+                ]
+            }, this);
         } else {
             navbarPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.component.html';
+            jhipsterUtils.rewriteFile({
+                file: navbarPath,
+                needle: 'jhipster-needle-add-element-to-menu',
+                splicable: [`<li routerLinkActive="active">
+                                <a routerLink="${routerName}" routerLinkActive="active" ng-click="vm.collapseNavbar()">
+                                    <span class="glyphicon glyphicon-${glyphiconName}"></span>&nbsp;
+                                    <span ${enableTranslation ? 'data-translate="global.menu.' + routerName + '"' : ''}>${_.startCase(routerName)}</span>
+                                </a>
+                            </li>`
+                ]
+            }, this);
         }
 
-        jhipsterUtils.rewriteFile({
-            file: navbarPath,
-            needle: 'jhipster-needle-add-element-to-menu',
-            splicable: [`<li ui-sref-active="active">
-                            <a ui-sref="${routerName}" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-${glyphiconName}"></span>&nbsp;
-                                <span ${enableTranslation ? 'data-translate="global.menu.' + routerName + '"' : ''}>${_.startCase(routerName)}</span>
-                            </a>
-                        </li>`
-            ]
-        }, this);
+
     } catch (e) {
         this.log(chalk.yellow('\nUnable to find ') + navbarPath + chalk.yellow(' or missing required jhipster-needle. Reference to ') + routerName + ' ' + chalk.yellow('not added to menu.\n'));
     }
@@ -70,11 +83,12 @@ Generator.prototype.addElementToMenu = function (routerName, glyphiconName, enab
  * @param {string} routerName - The name of the AngularJS router that is added to the admin menu.
  * @param {string} glyphiconName - The name of the Glyphicon (from Bootstrap) that will be displayed.
  * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addElementToAdminMenu = function (routerName, glyphiconName, enableTranslation) {
+Generator.prototype.addElementToAdminMenu = function (routerName, glyphiconName, enableTranslation, clientFramework) {
     try {
         var navbarAdminPath;
-        if (this.clientFw === 'angular1') {
+        if (clientFramework === 'angular1') {
             navbarAdminPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.html';
         } else {
             navbarAdminPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.component.html';
@@ -100,28 +114,78 @@ Generator.prototype.addElementToAdminMenu = function (routerName, glyphiconName,
  *
  * @param {string} routerName - The name of the AngularJS router (which by default is the name of the entity).
  * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addEntityToMenu = function (routerName, enableTranslation) {
+Generator.prototype.addEntityToMenu = function (routerName, enableTranslation, clientFramework) {
     try {
         var entityMenuPath;
-        if (this.clientFw === 'angular1') {
+        if (clientFramework === 'angular1') {
             entityMenuPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.html';
+            jhipsterUtils.rewriteFile({
+                file: entityMenuPath,
+                needle: 'jhipster-needle-add-entity-to-menu',
+                splicable: [`<li ui-sref-active="active">
+                                <a ui-sref="${routerName}" ng-click="vm.collapseNavbar()">
+                                    <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
+                                    <span ${enableTranslation ? 'data-translate="global.menu.entities.' + _.camelCase(routerName) + '"' : ''}>${_.startCase(routerName)}</span>
+                                </a>
+                            </li>`
+                ]
+            }, this);
         } else {
             entityMenuPath = CLIENT_MAIN_SRC_DIR + 'app/layouts/navbar/navbar.component.html';
+            jhipsterUtils.rewriteFile({
+                file: entityMenuPath,
+                needle: 'jhipster-needle-add-entity-to-menu',
+                splicable: [`<li uiSrefActive="active">
+                        <a class="dropdown-item" routerLink="${routerName}" (click)="collapseNavbar()">
+                            <i class="fa fa-fw fa-asterisk" aria-hidden="true"></i>
+                            <span ${enableTranslation ? 'jhiTranslate="global.menu.entities.' + _.camelCase(routerName) + '"' : ''}>${_.startCase(routerName)}</span>
+                        </a>
+                    </li>`
+                ]
+            }, this);
         }
-        jhipsterUtils.rewriteFile({
-            file: entityMenuPath,
-            needle: 'jhipster-needle-add-entity-to-menu',
-            splicable: [`<li ui-sref-active="active">
-                            <a ui-sref="${routerName}" ng-click="vm.collapseNavbar()">
-                                <span class="glyphicon glyphicon-asterisk"></span>&nbsp;
-                                <span ${enableTranslation ? 'data-translate="global.menu.entities.' + _.camelCase(routerName) + '"' : ''}>${_.startCase(routerName)}</span>
-                            </a>
-                        </li>`
-            ]
-        }, this);
     } catch (e) {
         this.log(chalk.yellow('\nUnable to find ') + entityMenuPath + chalk.yellow(' or missing required jhipster-needle. Reference to ') + routerName + ' ' + chalk.yellow('not added to menu.\n'));
+    }
+};
+/**
+ * Add a new entity in the TS modules file.
+ *
+ * @param {string} routerName - The name of the AngularJS router (which by default is the name of the entity).
+ * @param {boolean} enableTranslation - If translations are enabled or not
+ * @param {string} clientFramework - The name of the client framework
+ */
+Generator.prototype.addEntityToModule = function (entityInstance, entityClass, entityAngularJSName, entityFolderName, entityFileName, enableTranslation, clientFramework) {
+    try {
+        if (clientFramework === 'angular1') {
+            return;
+        }
+        var appName = this.getAngular2AppName();
+        var entityModulePath = CLIENT_MAIN_SRC_DIR + 'app/entities/entity.module.ts';
+
+        jhipsterUtils.rewriteFile({
+            file: entityModulePath,
+            needle: 'jhipster-needle-add-entity-module-import',
+            splicable: [
+                this.stripMargin(
+                    `|import \{ ${appName}${entityAngularJSName}Module \} from \'./${entityFolderName}/${entityFileName}.module\';`
+                )
+            ]
+        }, this);
+
+        jhipsterUtils.rewriteFile({
+            file: entityModulePath,
+            needle: 'jhipster-needle-add-entity-module',
+            splicable: [
+                this.stripMargin(
+                    `|${appName}${entityAngularJSName}Module,`
+                )
+            ]
+        }, this);
+    } catch (e) {this.log(e);
+        this.log(chalk.yellow('\nUnable to find ') + entityModulePath + chalk.yellow(' or missing required jhipster-needle. Reference to ') + entityInstance+ entityClass+ entityFolderName+ entityFileName + ' ' + chalk.yellow('not added to ' + entityModulePath + '.\n'));
     }
 };
 
@@ -398,6 +462,60 @@ Generator.prototype.addBowerrcParameter = function (key, value) {
 };
 
 /**
+ * Add a new dependency in the "package.json".
+ *
+ * @param {string} name - dependency name
+ * @param {string} version - dependency version
+ */
+Generator.prototype.addNpmDependency = function (name, version) {
+    var fullPath = 'package.json';
+    try {
+        jhipsterUtils.rewriteJSONFile(fullPath, function (jsonObj) {
+            jsonObj.dependencies[name] = version;
+        }, this);
+    } catch (e) {
+        this.log(e);
+        this.log(chalk.yellow('\nUnable to find ') + fullPath + chalk.yellow('. Reference to ') + 'npm dependency (name: ' + name + ', version:' + version + ')' + chalk.yellow(' not added.\n'));
+    }
+};
+
+/**
+ * Add a new devDependency in the "package.json".
+ *
+ * @param {string} name - devDependency name
+ * @param {string} version - devDependency version
+ */
+Generator.prototype.addNpmDevDependency = function (name, version) {
+    var fullPath = 'package.json';
+    try {
+        jhipsterUtils.rewriteJSONFile(fullPath, function (jsonObj) {
+            jsonObj.devDependencies[name] = version;
+        }, this);
+    } catch (e) {
+        this.log(e);
+        this.log(chalk.yellow('\nUnable to find ') + fullPath + chalk.yellow('. Reference to ') + 'npm devDependency (name: ' + name + ', version:' + version + ')' + chalk.yellow(' not added.\n'));
+    }
+};
+
+/**
+ * Add a new script in the "package.json".
+ *
+ * @param {string} name - script name
+ * @param {string} data - script version
+ */
+Generator.prototype.addNpmScript = function (name, data) {
+    var fullPath = 'package.json';
+    try {
+        jhipsterUtils.rewriteJSONFile(fullPath, function (jsonObj) {
+            jsonObj.scripts[name] = data;
+        }, this);
+    } catch (e) {
+        this.log(e);
+        this.log(chalk.yellow('\nUnable to find ') + fullPath + chalk.yellow('. Reference to ') + 'npm script (name: ' + name + ', data:' + data + ')' + chalk.yellow(' not added.\n'));
+    }
+};
+
+/**
  * Add a new module to the angular application in "app.module.js".
  *
  * @param {string} moduleName - module name
@@ -543,11 +661,12 @@ Generator.prototype.addColumnToLiquibaseEntityChangeset = function (filePath, co
  * @param {string} socialParameter - parameter to send to social connection ex: 'public_profile,email'
  * @param {string} buttonColor - color of the social button. ex: '#3b5998'
  * @param {string} buttonHoverColor - color of the social button when is hover. ex: '#2d4373'
+ * @param {string} clientFramework - The name of the client framework
  */
-Generator.prototype.addSocialButton = function (isUseSass, socialName, socialParameter, buttonColor, buttonHoverColor) {
+Generator.prototype.addSocialButton = function (isUseSass, socialName, socialParameter, buttonColor, buttonHoverColor, clientFramework) {
     var socialServicefullPath = CLIENT_MAIN_SRC_DIR + 'app/account/social/social.service.js';
     var loginfullPath, registerfullPath;
-    if (this.clientFw === 'angular1') {
+    if (clientFramework === 'angular1') {
         loginfullPath = CLIENT_MAIN_SRC_DIR + 'app/account/login/login.html';
         registerfullPath = CLIENT_MAIN_SRC_DIR + 'app/account/register/register.html';
     } else {
@@ -913,16 +1032,25 @@ Generator.prototype.copyTemplate = function (source, dest, action, generator, op
 
     var _this = generator || this;
     var _opt = opt || {};
-    var regex;
+    let regex;
     switch (action) {
     case 'stripHtml' :
-        regex = /( data-translate\="([a-zA-Z0-9\ \+\{\}\'](\.)?)+")|( translate-values\="\{([a-zA-Z]|\d|\:|\{|\}|\[|\]|\-|\'|\s|\.)*?\}")|( translate-compile)|( translate-value-max\="[0-9\{\}\(\)\|]*")/g;
-        //looks for something like data-translate="foo.bar.message" and translate-values="{foo: '{{ foo.bar }}'}"
+        regex= new RegExp([
+            /( (data-t|jhiT)ranslate\="([a-zA-Z0-9\ \+\{\}\'](\.)?)+")/,                    // data-translate or jhiTranslate
+            /( translate(-v|V)alues\="\{([a-zA-Z]|\d|\:|\{|\}|\[|\]|\-|\'|\s|\.)*?\}")/,    // translate-values or translateValues
+            /( translate-compile)/,                                                         // translate-compile
+            /( translate-value-max\="[0-9\{\}\(\)\|]*")/,                                   // translate-value-max
+        ].map(r => r.source).join('|'), 'g');
         jhipsterUtils.copyWebResource(source, dest, regex, 'html', _this, _opt, template);
         break;
     case 'stripJs' :
-        regex = /(\,[\s]*(resolve)\:[\s]*[\[]?[\{][\s]*(translatePartialLoader|token: 'translate')[\[]?[\'a-zA-Z0-9\$\,\(\)\{\}\.\<\%\=\-\>\;\s\:\[\]]*(\;[\s]*\}\][\s]*\}|\)[\s]*\}\]))|(import\s\{\s?[a-zA-Z0-9\=\<\>\%]*LanguageService\s?\}\sfrom\s[\"\'\.\/]*shared[\"|\']\;)/g;
-        //looks for something like translatePartialLoader: [*] or token: 'translate'
+        regex= new RegExp([
+            /(\,[\s]*(resolve)\:[\s]*[\{][\s]*(translatePartialLoader)[\'a-zA-Z0-9\$\,\(\)\{\.\<\%\=\-\>\;\s\:\[\]]*(\;[\s]*\}\][\s]*\}))/, // ng1 resolve block
+            /([\s]import\s\{\s?JhiLanguageService\s?\}\sfrom\s[\"|\']ng-jhipster[\"|\']\;)/,       // ng2 import jhiLanguageService
+            /(\,?\s?JhiLanguageService\,?\s?)/,                                                          // ng2 import jhiLanguageService
+            /(private\s[a-zA-Z0-9]*(L|l)anguageService\s?\:\s?JhiLanguageService\s?,*[\s]*)/,          // ng2 jhiLanguageService constructor argument
+            /(this\.[a-zA-Z0-9]*(L|l)anguageService\.setLocations\(\[[\'|\"][a-zA-Z0-9-_]*[\'|\"]\]\)\;[\s]*)/,// jhiLanguageService invocations
+        ].map(r => r.source).join('|'), 'g');
         jhipsterUtils.copyWebResource(source, dest, regex, 'js', _this, _opt, template);
         break;
     case 'copy' :
@@ -1321,7 +1449,7 @@ Generator.prototype.generateKeyStore = function() {
             `-dname "CN=Java Hipster, OU=Development, O=${this.packageName}, L=, ST=, C="`
         , function(code) {
             if (code !== 0) {
-                parent.env.error(chalk.red(`\nFailed to create a KeyStore with \'keytool\'`), code);
+                parent.error('\nFailed to create a KeyStore with \'keytool\'', code);
             } else {
                 parent.log(chalk.green(`\nKeyStore '${keyStoreFile}' generated successfully.\n`));
             }
@@ -1334,11 +1462,12 @@ Generator.prototype.generateKeyStore = function() {
  */
 Generator.prototype.printJHipsterLogo = function () {
     this.log(' \n' +
-        chalk.green('        ██') + chalk.red('  ██    ██  ████████  ███████    ██████  ████████  ████████  ███████\n') +
-        chalk.green('        ██') + chalk.red('  ██    ██     ██     ██    ██  ██          ██     ██        ██    ██\n') +
-        chalk.green('        ██') + chalk.red('  ████████     ██     ███████    █████      ██     ██████    ███████\n') +
-        chalk.green('  ██    ██') + chalk.red('  ██    ██     ██     ██             ██     ██     ██        ██   ██\n') +
-        chalk.green('   ██████ ') + chalk.red('  ██    ██  ████████  ██        ██████      ██     ████████  ██    ██\n')
+        chalk.green('        ██╗') + chalk.red(' ██╗   ██╗ ████████╗ ███████╗   ██████╗ ████████╗ ████████╗ ███████╗\n') +
+        chalk.green('        ██║') + chalk.red(' ██║   ██║ ╚══██╔══╝ ██╔═══██╗ ██╔════╝ ╚══██╔══╝ ██╔═════╝ ██╔═══██╗\n') +
+        chalk.green('        ██║') + chalk.red(' ████████║    ██║    ███████╔╝ ╚█████╗     ██║    ██████╗   ███████╔╝\n') +
+        chalk.green('  ██╗   ██║') + chalk.red(' ██╔═══██║    ██║    ██╔════╝   ╚═══██╗    ██║    ██╔═══╝   ██╔══██║\n') +
+        chalk.green('  ╚██████╔╝') + chalk.red(' ██║   ██║ ████████╗ ██║       ██████╔╝    ██║    ████████╗ ██║  ╚██╗\n') +
+        chalk.green('   ╚═════╝ ') + chalk.red(' ╚═╝   ╚═╝ ╚═══════╝ ╚═╝       ╚═════╝     ╚═╝    ╚═══════╝ ╚═╝   ╚═╝\n')
     );
     this.log(chalk.white.bold('                            http://jhipster.github.io\n'));
     if (!this.skipChecks) this.checkForNewVersion();
@@ -1372,6 +1501,13 @@ Generator.prototype.checkForNewVersion = function () {
  */
 Generator.prototype.getAngularAppName = function () {
     return _.camelCase(this.baseName, true) + (this.baseName.endsWith('App') ? '' : 'App');
+};
+
+/**
+ * get the angular 2 app name for the app.
+ */
+Generator.prototype.getAngular2AppName = function () {
+    return _.upperFirst(_.camelCase(this.baseName, true));
 };
 
 /**
@@ -1556,24 +1692,29 @@ Generator.prototype.writeFilesToDisk = function (files, generator, returnFiles, 
             if (!blockTemplate.condition || blockTemplate.condition(_this)) {
                 let path = blockTemplate.path ? blockTemplate.path : '';
                 blockTemplate.templates.map(templateObj => {
-                    let templatePath = prefix ? `${prefix}/` : '';
+                    let templatePath = path;
                     let method = 'template';
                     let useTemplate = false;
-                    let interpolateRegex = {};
+                    let options = {};
+                    let templatePathTo ;
                     if (typeof templateObj === 'string') {
-                        templatePath += path + templateObj;
+                        templatePath += templateObj;
                     } else {
-                        templatePath += path + templateObj.file;
+                        templatePath += templateObj.file;
                         method = templateObj.method ? templateObj.method : method;
                         useTemplate = templateObj.template ? templateObj.template : useTemplate;
-                        interpolateRegex = templateObj.interpolate ? templateObj.interpolate : interpolateRegex;
+                        options = templateObj.options ? templateObj.options : options;
                     }
-                    let templatePathTo = templatePath.replace(`${prefix}/`,'');
-                    templatePathTo = templatePathTo.replace(/([/])_|^_/, '$1');
+                    if (templateObj && templateObj.renameTo) {
+                        templatePathTo = path + templateObj.renameTo(_this);
+                    } else {
+                        templatePathTo = templatePath.replace(/([/])_|^_/, '$1');
+                    }
+                    let templatePathFrom = prefix ? `${prefix}/${templatePath}` : templatePath;
                     if (returnFiles) {
                         filesOut.push(templatePathTo);
                     } else {
-                        _this[method](templatePath, templatePathTo, _this, interpolateRegex, useTemplate);
+                        _this[method](templatePathFrom, templatePathTo, _this, options, useTemplate);
                     }
                 });
             }
@@ -1599,7 +1740,6 @@ Generator.prototype.installI18nClientFilesByLanguage = function (_this, webappDi
     this.copyI18nFilesByName(_this, webappDir, 'register.json', lang);
     this.copyI18nFilesByName(_this, webappDir, 'sessions.json', lang);
     this.copyI18nFilesByName(_this, webappDir, 'settings.json', lang);
-    this.copyI18nFilesByName(_this, webappDir, 'reset.json', lang);
     this.copyI18nFilesByName(_this, webappDir, 'user-management.json', lang);
 
     // tracker.json for Websocket
@@ -1612,23 +1752,24 @@ Generator.prototype.installI18nClientFilesByLanguage = function (_this, webappDi
     }
 
     // Templates
-    _this.template(webappDir + 'i18n/' + lang + '/_activate.json', webappDir + 'i18n/' + lang + '/activate.json', this, {});
-    _this.template(webappDir + 'i18n/' + lang + '/_global.json', webappDir + 'i18n/' + lang + '/global.json', this, {});
-    _this.template(webappDir + 'i18n/' + lang + '/_health.json', webappDir + 'i18n/' + lang + '/health.json', this, {});
+    _this.template(`${webappDir}i18n/${lang}/_activate.json`, `${webappDir}i18n/${lang}/activate.json`, this, {});
+    _this.template(`${webappDir}i18n/${lang}/_global.json`, `${webappDir}i18n/${lang}/global.json`, this, {});
+    _this.template(`${webappDir}i18n/${lang}/_health.json`, `${webappDir}i18n/${lang}/health.json`, this, {});
+    _this.template(`${webappDir}i18n/${lang}/_reset.json`, `${webappDir}i18n/${lang}/reset.json`, this, {});
 
 
 };
 
 Generator.prototype.installI18nServerFilesByLanguage = function (_this, resourceDir, lang) {
     // Template the message server side properties
-    var lang_prop = lang.replace(/-/g, '_');
-    _this.template(resourceDir + 'i18n/_messages_' + lang_prop + '.properties', resourceDir + 'i18n/messages_' + lang_prop + '.properties', this, {});
+    var langProp = lang.replace(/-/g, '_');
+    _this.template(`${resourceDir}i18n/_messages_${langProp}.properties`, `${resourceDir}i18n/messages_${langProp}.properties`, this, {});
 
 };
 
-Generator.prototype.copyI18n = function (language) {
+Generator.prototype.copyI18n = function (language, prefix) {
     try {
-        this.template(CLIENT_MAIN_SRC_DIR + 'i18n/_entity_' + language + '.json', CLIENT_MAIN_SRC_DIR + 'i18n/' + language + '/' + this.entityInstance + '.json', this, {});
+        this.template(`${prefix}/i18n/_entity_${language}.json`, `${CLIENT_MAIN_SRC_DIR}i18n/${language}/${this.entityInstance}.json`, this, {});
         this.addEntityTranslationKey(this.entityTranslationKeyMenu, this.entityClass, language);
     } catch (e) {
         // An exception is thrown if the folder doesn't exist
@@ -1636,9 +1777,9 @@ Generator.prototype.copyI18n = function (language) {
     }
 };
 
-Generator.prototype.copyEnumI18n = function (language, enumInfo) {
+Generator.prototype.copyEnumI18n = function (language, enumInfo , prefix) {
     try {
-        this.template(CLIENT_MAIN_SRC_DIR + 'i18n/_enum_' + language + '.json', CLIENT_MAIN_SRC_DIR + 'i18n/' + language + '/' + enumInfo.enumInstance + '.json', enumInfo, {});
+        this.template(`${prefix}/i18n/_enum_${language}.json`, `${CLIENT_MAIN_SRC_DIR}i18n/${language}/${enumInfo.enumInstance}.json`, enumInfo, {});
     } catch (e) {
         // An exception is thrown if the folder doesn't exist
         // do nothing
@@ -1660,6 +1801,28 @@ Generator.prototype.updateLanguagesInLanguageConstant = function (languages) {
         jhipsterUtils.replaceContent({
             file: fullPath,
             pattern: /\.constant.*LANGUAGES.*\[([^\]]*jhipster-needle-i18n-language-constant[^\]]*)\]/g,
+            content: content
+        }, this);
+    } catch (e) {
+        this.log(chalk.yellow('\nUnable to find ') + fullPath + chalk.yellow(' or missing required jhipster-needle. LANGUAGE constant not updated with languages: ') + languages + chalk.yellow(' since block was not found. Check if you have enabled translation support.\n'));
+    }
+};
+
+Generator.prototype.updateLanguagesInLanguageConstantNG2 = function (languages) {
+    var fullPath = CLIENT_MAIN_SRC_DIR + 'app/shared/language/language.constants.ts';
+    try {
+        var content = 'export const LANGUAGES: string[] = [\n';
+        for (var i = 0, len = languages.length; i < len; i++) {
+            var language = languages[i];
+            content += '    \'' + language + '\'' + (i !== languages.length - 1 ? ',' : '') + '\n';
+        }
+        content +=
+            '    // jhipster-needle-i18n-language-constant - JHipster will add/remove languages in this array\n' +
+            '];';
+
+        jhipsterUtils.replaceContent({
+            file: fullPath,
+            pattern: /export.*LANGUAGES.*\[([^\]]*jhipster-needle-i18n-language-constant[^\]]*)\];/g,
             content: content
         }, this);
     } catch (e) {
@@ -1829,4 +1992,20 @@ Generator.prototype.httpGet = function(url, onSuccess, onFail) {
             onSuccess(body);
         });
     }).on('error', onFail);
+};
+
+/**
+ * Function to print a proper array with simple quoted strings
+ *
+ *  @param {array} array - the array to print
+ */
+Generator.prototype.toArrayString = function(array) {
+    return `['${array.join('\', \'')}']`;
+};
+
+/**
+ * Strip margin indicated by pipe `|` from a string literal
+ */
+Generator.prototype.stripMargin = function(content) {
+    return content.replace(/^[ ]*\|/gm,'');
 };

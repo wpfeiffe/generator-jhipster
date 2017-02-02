@@ -69,7 +69,7 @@ module.exports = JhipsterServerGenerator.extend({
         this.totalQuestions = this.configOptions.totalQuestions ? this.configOptions.totalQuestions : QUESTIONS;
         this.logo = this.configOptions.logo;
         this.baseName = this.configOptions.baseName;
-        this.yarnInstall = this.configOptions.yarnInstall = this.configOptions.yarnInstall || this.options['yarn'] || this.config.get('yarn');
+        this.clientPackageManager = this.configOptions.clientPackageManager;
     },
     initializing: {
         displayLogo: function () {
@@ -96,6 +96,7 @@ module.exports = JhipsterServerGenerator.extend({
             this.DOCKER_POSTGRESQL = constants.DOCKER_POSTGRESQL;
             this.DOCKER_MONGODB = constants.DOCKER_MONGODB;
             this.DOCKER_MSSQL = constants.DOCKER_MSSQL;
+            this.DOCKER_ORACLE = constants.DOCKER_ORACLE;
             this.DOCKER_CASSANDRA = constants.DOCKER_CASSANDRA;
             this.DOCKER_ELASTICSEARCH = constants.DOCKER_ELASTICSEARCH;
             this.DOCKER_KAFKA = constants.DOCKER_KAFKA;
@@ -174,7 +175,7 @@ module.exports = JhipsterServerGenerator.extend({
             this.nativeLanguage = this.config.get('nativeLanguage');
             this.languages = this.config.get('languages');
             this.uaaBaseName = this.config.get('uaaBaseName');
-            this.clientFw = this.config.get('clientFw');
+            this.clientFramework = this.config.get('clientFramework');
             var testFrameworks = this.config.get('testFrameworks');
             if (testFrameworks) {
                 this.testFrameworks = testFrameworks;
@@ -271,10 +272,11 @@ module.exports = JhipsterServerGenerator.extend({
 
             // Make dist dir available in templates
             if (this.buildTool === 'maven') {
-                this.CLIENT_DIST_DIR = 'target/' + constants.CLIENT_DIST_DIR;
+                this.BUILD_DIR = 'target/';
             } else {
-                this.CLIENT_DIST_DIR = 'build/' + constants.CLIENT_DIST_DIR;
+                this.BUILD_DIR = 'build/';
             }
+            this.CLIENT_DIST_DIR = this.BUILD_DIR + constants.CLIENT_DIST_DIR;
             // Make documentation URL available in templates
             this.DOCUMENTATION_URL = constants.JHIPSTER_DOCUMENTATION_URL;
             this.DOCUMENTATION_ARCHIVE_URL = constants.JHIPSTER_DOCUMENTATION_URL + constants.JHIPSTER_DOCUMENTATION_ARCHIVE_PATH + 'v' + this.jhipsterVersion;
@@ -376,8 +378,8 @@ module.exports = JhipsterServerGenerator.extend({
             this.protractorTests = this.testFrameworks.indexOf('protractor') !== -1;
             this.gatlingTests = this.testFrameworks.indexOf('gatling') !== -1;
             this.cucumberTests = this.testFrameworks.indexOf('cucumber') !== -1;
-            if (this.configOptions.clientFw) {
-                this.clientFw = this.configOptions.clientFw;
+            if (this.configOptions.clientFramework) {
+                this.clientFramework = this.configOptions.clientFramework;
             }
         },
 
@@ -399,7 +401,17 @@ module.exports = JhipsterServerGenerator.extend({
                 chalk.yellow.bold('ojdbc-' + this.ojdbcVersion + '.jar') + ' and place it in the `' +
                 chalk.yellow.bold(this.libFolder) + '` folder under the project root. \n');
         }
-        this.log(chalk.green.bold('\nServer app generated successfully.\n'));
+        this.log(chalk.green.bold('\nServer application generated successfully.\n'));
+
+        let logMsg =
+            'Run your Spring Boot application:' +
+            '\n ' + chalk.yellow.bold('./mvnw');
+        if (this.buildTool === 'gradle') {
+            logMsg =
+                'Run your Spring Boot application:' +
+                '\n ' + chalk.yellow.bold('./gradlew');
+        }
+        this.log(chalk.green(logMsg));
     }
 
 });

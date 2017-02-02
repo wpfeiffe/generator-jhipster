@@ -57,6 +57,7 @@ module.exports = ModulesGenerator.extend({
         jhipsterVar.jhiPrefixCapitalized = _.upperFirst(jhipsterVar.jhiPrefix);
         jhipsterVar.jhipsterVersion = this.config.get('jhipsterVersion');
         jhipsterVar.serverPort = this.config.get('serverPort');
+        jhipsterVar.clientFramework = this.config.get('clientFramework');
 
         jhipsterVar.angularAppName = this.getAngularAppName();
         jhipsterVar.mainClassName = this.getMainClassName();
@@ -81,6 +82,9 @@ module.exports = ModulesGenerator.extend({
         jhipsterFunc.addBowerrcParameter = this.addBowerrcParameter;
         jhipsterFunc.addBowerDependency = this.addBowerDependency;
         jhipsterFunc.addBowerOverride = this.addBowerOverride;
+        jhipsterFunc.addNpmDependency = this.addNpmDependency;
+        jhipsterFunc.addNpmDevDependency = this.addNpmDevDependency;
+        jhipsterFunc.addNpmScript = this.addNpmScript;
         jhipsterFunc.addMainCSSStyle = this.addMainCSSStyle;
         jhipsterFunc.addMainSCSSStyle = this.addMainSCSSStyle;
         jhipsterFunc.addAngularJsModule = this.addAngularJsModule;

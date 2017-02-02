@@ -17,7 +17,6 @@ const expectedFiles = {
         'gradlew',
         'gradlew.bat',
         'gradle/docker.gradle',
-        'gradle/gatling.gradle',
         'gradle/liquibase.gradle',
         'gradle/mapstruct.gradle',
         'gradle/profile_dev.gradle',
@@ -60,12 +59,8 @@ const expectedFiles = {
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/JhipsterApp.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/ApplicationWebXml.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/aop/logging/LoggingAspect.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/apidoc/package-info.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/apidoc/SwaggerConfiguration.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/apidoc/PageableParameterBuilderPlugin.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/async/package-info.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/async/ExceptionHandlingAsyncTaskExecutor.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/package-info.java',
+        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/ApplicationProperties.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/AsyncConfiguration.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/CacheConfiguration.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/Constants.java',
@@ -80,15 +75,12 @@ const expectedFiles = {
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/WebConfigurer.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/audit/package-info.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/audit/AuditEventConverter.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/locale/package-info.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/locale/AngularCookieLocaleResolver.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/package-info.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/AbstractAuditingEntity.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/Authority.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/PersistentAuditEvent.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/PersistentToken.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/User.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/util/JSR310DateConverters.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/repository/package-info.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/repository/AuthorityRepository.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/repository/CustomAuditEventRepository.java',
@@ -96,15 +88,11 @@ const expectedFiles = {
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/repository/UserRepository.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/repository/PersistentTokenRepository.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/package-info.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/AjaxAuthenticationFailureHandler.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/AjaxAuthenticationSuccessHandler.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/AjaxLogoutSuccessHandler.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/AuthoritiesConstants.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/CustomPersistentRememberMeServices.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/Http401UnauthorizedEntryPoint.java',
+        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/PersistentTokenRememberMeServices.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/SecurityUtils.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/SpringSecurityAuditorAware.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/UserDetailsService.java',
+        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/DomainUserDetailsService.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/security/UserNotActivatedException.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/service/package-info.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/service/AuditEventService.java',
@@ -115,8 +103,6 @@ const expectedFiles = {
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/service/dto/UserDTO.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/service/mapper/package-info.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/service/mapper/UserMapper.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/web/filter/package-info.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/web/filter/CachingHttpHeadersFilter.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/web/rest/vm/package-info.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/web/rest/vm/KeyAndPasswordVM.java',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/web/rest/vm/LoggerVM.java',
@@ -409,7 +395,8 @@ const expectedFiles = {
     ],
 
     microservice: [
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/MicroserviceSecurityConfiguration.java'
+        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/MicroserviceSecurityConfiguration.java',
+        'package.json'
     ],
 
     microserviceGradle: [
@@ -440,7 +427,6 @@ const expectedFiles = {
 
     mongodb: [
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/dbmigrations/InitialSetupMigration.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/domain/util/JSR310DateConverters.java',
         DOCKER_DIR + 'mongodb.yml',
         DOCKER_DIR + 'mongodb-cluster.yml',
         DOCKER_DIR + 'mongodb/MongoDB.Dockerfile',
@@ -464,7 +450,7 @@ const expectedFiles = {
     elasticsearch: [
         DOCKER_DIR + 'elasticsearch.yml',
         SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/repository/search/UserSearchRepository.java',
-        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/ElasticSearchConfiguration.java',
+        SERVER_MAIN_SRC_DIR + 'com/mycompany/myapp/config/ElasticsearchConfiguration.java',
         SERVER_TEST_SRC_DIR + 'com/mycompany/myapp/config/elasticsearch/IndexReinitializer.java'
     ],
 

@@ -1,13 +1,17 @@
 package <%=packageName%>.config;
-<% if (databaseType == 'mongodb') { %>
+
+<%_ if (databaseType == 'mongodb') { _%>
 import <%=packageName%>.config.oauth2.MongoDBApprovalStore;
 import <%=packageName%>.config.oauth2.MongoDBAuthorizationCodeServices;
 import <%=packageName%>.config.oauth2.MongoDBClientDetailsService;
 import <%=packageName%>.config.oauth2.MongoDBTokenStore;
-import <%=packageName%>.repository.*;<% } %>
-import <%=packageName%>.security.AjaxLogoutSuccessHandler;
+import <%=packageName%>.repository.*;
+<%_ } _%>
 import <%=packageName%>.security.AuthoritiesConstants;
-import <%=packageName%>.security.Http401UnauthorizedEntryPoint;
+
+import io.github.jhipster.security.Http401UnauthorizedEntryPoint;
+import io.github.jhipster.security.AjaxLogoutSuccessHandler;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,8 +33,12 @@ import org.springframework.security.oauth2.provider.code.AuthorizationCodeServic
 import org.springframework.security.oauth2.provider.code.JdbcAuthorizationCodeServices;<% } %>
 import org.springframework.security.oauth2.provider.token.TokenStore;<% if (databaseType == 'sql') { %>
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;<% } %>
-<% if (databaseType == 'sql') { %>
-import javax.sql.DataSource;<% } %>
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
+<%_ if (databaseType == 'sql') { _%>
+
+import javax.sql.DataSource;
+<%_ } _%>
 
 @Configuration
 public class OAuth2ServerConfiguration {<% if (databaseType == 'sql') { %>
@@ -57,23 +65,26 @@ public class OAuth2ServerConfiguration {<% if (databaseType == 'sql') { %>
 
         private final TokenStore tokenStore;
 
-        private final Http401UnauthorizedEntryPoint authenticationEntryPoint;
+        private final Http401UnauthorizedEntryPoint http401UnauthorizedEntryPoint;
 
         private final AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler;
 
-        public ResourceServerConfiguration(TokenStore tokenStore, Http401UnauthorizedEntryPoint authenticationEntryPoint,
-                AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler) {
+        private final CorsFilter corsFilter;
+
+        public ResourceServerConfiguration(TokenStore tokenStore, Http401UnauthorizedEntryPoint http401UnauthorizedEntryPoint,
+            AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler, CorsFilter corsFilter) {
 
             this.tokenStore = tokenStore;
-            this.authenticationEntryPoint = authenticationEntryPoint;
+            this.http401UnauthorizedEntryPoint = http401UnauthorizedEntryPoint;
             this.ajaxLogoutSuccessHandler = ajaxLogoutSuccessHandler;
+            this.corsFilter = corsFilter;
         }
 
         @Override
         public void configure(HttpSecurity http) throws Exception {
             http
                 .exceptionHandling()
-                .authenticationEntryPoint(authenticationEntryPoint)
+                .authenticationEntryPoint(http401UnauthorizedEntryPoint)
             .and()
                 .logout()
                 .logoutUrl("/api/logout")
@@ -81,6 +92,7 @@ public class OAuth2ServerConfiguration {<% if (databaseType == 'sql') { %>
             .and()
                 .csrf()
                 .disable()
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
                 .headers()
                 .frameOptions().disable()
             .and()<% if (!websocket) { %>
